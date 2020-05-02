@@ -1,51 +1,38 @@
-import os
-
 from flask import Flask
+from flask_migrate import Migrate, MigrateCommand
+from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_script import Manager, Command, Shell
 from flask_login import LoginManager
-from flask_wtf.csrf import CsrfProtect
-from flask_mail import Mail
-from werkzeug.debug import DebuggedApplication
+import os, config
 
-from celery import Celery
+# initializes extensions
+db = SQLAlchemy()
+mail = Mail()
+migrate = Migrate()
+login_manager = LoginManager()
+login_manager.login_view = 'main.login'
 
-import config
-from . import custom_filters
+# application factory
+def create_app(config):
+    
+    # create application instance
+    app = Flask(__name__)
+    app.config.from_object(config)
 
-app = Flask(__name__)
-app.wsgi_app = DebuggedApplication(app.wsgi_app, True)
+    db.init_app(app)
+    mail.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
 
-app.config.from_object(os.environ.get('FLASK_ENV') or 'config.DevelopementConfig')
-custom_filters.generate_custom_filter(app)
+    from .frontend import frontend as frontend_blueprint
+    app.register_blueprint(frontend_blueprint)
 
-def make_celery(app):
-    celery = Celery(
-        app.import_name,
-        backend='redis://redis:6379/0',
-        broker='amqp://myuser1:mypass1@rabbitmq:5672/myvhost1',
-    )
+    from .backend import backend as backend_blueprint
+    app.register_blueprint(backend_blueprint)
+    
+    #from .admin import main as admin_blueprint
+    #app.register_blueprint(admin_blueprint)
 
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
+    return app
 
-    celery.Task = ContextTask
-    return celery
-
-celery_app = make_celery(app)
-
-csrf = CsrfProtect()
-csrf.init_app(app)
-
-db = SQLAlchemy(app)
-migrate = Migrate(app,  db)
-
-mail = Mail(app)
-
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-
-
-from . import views

@@ -1,9 +1,13 @@
+from app import db, login_manager, config
 from datetime import datetime
-
-from flask_login import UserMixin
+from flask_login import (LoginManager, UserMixin, login_required,
+                          login_user, current_user, logout_user)
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app import app, db, login_manager
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.query(User).get(user_id)
 
 
 class Role(db.Model):
@@ -19,7 +23,7 @@ class Role(db.Model):
 
     @classmethod
     def insert_roles(cls):
-        for permission in app.config['PERMISSION']:
+        for permission in config['PERMISSION']:
             role = cls(name=permission)
             db.session.add(role)
             db.session.commit()
@@ -67,8 +71,5 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return "<{}:{}>".format(self.id, self.username)
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.query(User).get(user_id)
+    
+    

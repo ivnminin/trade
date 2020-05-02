@@ -1,7 +1,22 @@
-from app import celery_app
-from .models import db
-from flask_mail import Message
-from app import mail
+from celery import Celery
+from app import create_app, config
+
+def make_celery(app):
+    celery = Celery(
+        app.import_name,
+        backend='redis://redis:6379/0',
+        broker='amqp://myuser1:mypass1@rabbitmq:5672/myvhost1',
+    )
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
+
+celery_app = make_celery(create_app(config))
 
 
 @celery_app.task
