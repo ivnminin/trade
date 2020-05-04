@@ -5,7 +5,7 @@ def make_celery(app):
     celery = Celery(
         app.import_name,
         backend='redis://redis:6379/0',
-        broker='amqp://myuser1:mypass1@rabbitmq:5672/myvhost1',
+        broker='redis://redis:6379/0',
     )
 
     class ContextTask(celery.Task):
