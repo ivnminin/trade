@@ -4,8 +4,8 @@ from app import create_app, config
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        backend='redis://redis:6379/0',
-        broker='redis://redis:6379/0',
+        backend='redis://localhost:6379/0',
+        broker='redis://localhost:6379/0',
     )
 
     class ContextTask(celery.Task):
