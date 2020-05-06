@@ -4,7 +4,7 @@ from flask import request, render_template, redirect, url_for, flash, make_respo
 from flask_login import login_required, login_user, current_user, logout_user
 from app.models import User, db
 from .forms import LoginForm
-from app.workroom.waiter import gen_prime
+from .waiter import gen_prime
 
 
 @backend.route('/backend/', methods=['GET', 'POST'])
@@ -18,7 +18,7 @@ def index():
             return make_response(', '.join(map(lambda x: str(x), r)))
         except Exception as e:
             return make_response(str(e))
-            # log.error('Function send_email.apply_async has some problems, error: {}'.format(e))
+            log.error('Function send_email.apply_async has some problems, error: {}'.format(e))
 
 
 
