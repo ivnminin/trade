@@ -151,16 +151,15 @@ class Category(db.Model):
     #
     #     return positions
 
-    def turn_on_dealer_operation_to_all_subcategories(self):
+    def get_subcategories(self):
+        categories = []
+        for category in self.children:
+            categories.append(category)
 
-        for subcategory in self.children:
-            subcategory.dealer_operation = True
-            db.session.add(subcategory)
-            db.session.commit()
-            for subcategory_second in subcategory.children:
-                subcategory_second.dealer_operation = True
-                db.session.add(subcategory.dealer_operation)
-                db.session.commit()
+            for category_second in category.children:
+                categories.append(category_second)
+
+        return categories
 
 
     @classmethod

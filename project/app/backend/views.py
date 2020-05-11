@@ -5,7 +5,7 @@ from flask_login import login_required, login_user, current_user, logout_user
 from app.models import db, User, TypeDealer, Category
 from .forms import LoginForm
 from .waiter import gen_prime, get_xml_price
-from . import NLReceiver
+from . import NLReceiver, logger_dealer_nl
 
 
 @backend.route("/backend/", methods=["GET", "POST"])
@@ -21,7 +21,11 @@ def index():
             # job = get_xml_price.apply_async(args=[], countdown=3)
             # r = job.get()
 
-            response = NLReceiver(current_app.config["NL_CATEGORIES"]["URL"].format(catalog_name=current_app.config["NL_CATALOG_MAIN"]), current_app.config["NL_CATEGORIES"]["DATA_KEY"])
+            task_name = "UPDATING STRUCTURE OF CATALOG"
+
+            response = NLReceiver(current_app.config["NL_CATEGORIES"]["URL"]
+                                  .format(catalog_name=current_app.config["NL_CATALOG_MAIN"]),
+                                  current_app.config["NL_CATEGORIES"]["DATA_KEY"])
 
             nl_error = response.error
             if nl_error:
@@ -37,8 +41,8 @@ def index():
             categories = sorted(response.data.get("category", []), key=lambda x: int(x["parentId"]))
             categories_in_db = list(map(lambda x: x.nl_id, db.session.query(Category).all()[1:]))
 
-            task_name = "task_name"
-            task_result = {"task_name": task_name, "result": {"new_category": [], "old_category": []}}
+            task_result = {"task_name": task_name, "result": {"new_category": [],
+                                                              "old_category": []}}
 
             for category in categories:
                 if int(category["id"]) not in categories_in_db:
@@ -49,7 +53,7 @@ def index():
                         db.session.add(Category.gen_el_to_db(category, root_directory))
                         db.session.commit()
                     else:
-                        parent = Category.query.filter_by(nl_id=int(category["parentId"]),
+                        parent = db.session.query(Category).query.filter_by(nl_id=int(category["parentId"]),
                                                           dealer=TypeDealer.nl_dealer.name).first()
                         db.session.add(Category.gen_el_to_db(category, parent))
                         db.session.commit()
@@ -64,6 +68,19 @@ def index():
                               .format(task_result["task_name"],
                                       "; ".join(task_result["result"]["new_category"]),
                                       "; ".join(task_result["result"]["old_category"]))
+
+            turn_on_main_categories = db.session.query(Category).filter(Category.nl_parent_id == 0, Category.dealer_operation).all()
+
+            for main_category in turn_on_main_categories:
+
+                for category_ in main_category.get_subcategories():
+                    category_.dealer_operation = True
+                    db.session.add(category_)
+                    db.session.commit()
+
+            task_msg_result = "{}, turn_on_main_categories: {}".format(task_msg_result, "success")
+
+            logger_dealer_nl.info(task_msg_result)
 
             return make_response(task_msg_result)
 
