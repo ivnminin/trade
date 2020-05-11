@@ -28,6 +28,23 @@
 
         {% block content %}
 
+            <div class="grid-x grid-padding-x" style="padding-top: 30px">
+                <div class="cell">
+                    <h4>Режим модератора</h4>
+                    <br>
+
+                    {% block nav_moderator %}
+                        {% include 'backend/_nav_moderator.html' %}
+                        <hr style="max-width: none;">
+                    {% endblock %}
+
+                    {% block moderator %}
+
+                    {% endblock %}
+
+                </div>
+            </div>
+
         {% endblock %}
 
         {% block  script %}

@@ -1,11 +1,17 @@
+import requests, zipfile, os
 from celery import Celery
-from app import create_app, config
+from celery.schedules import crontab
+
+from app import create_app
+
+app = create_app()
+app.app_context().push()
 
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        backend='redis://redis:6379/0',
-        broker='amqp://myuser1:mypass1@rabbitmq:5672/myvhost1',
+        backend="redis://redis_trade:6379/0",
+        broker="amqp://myuser1:mypass1@rabbitmq_trade:5672/myvhost1",
     )
 
     class ContextTask(celery.Task):
@@ -16,7 +22,14 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
-celery_app = make_celery(create_app(config))
+celery_app = make_celery(app)
+# celery_app.conf.beat_schedule = {
+#     # Executes every Monday morning at 7:30 a.m.
+#     "add-every-monday-morning": {
+#         "task": "app.backend.waiter.get_xml_price",
+#         "schedule": crontab(minute="*/1")
+#     },
+# }
 
 
 @celery_app.task
@@ -31,6 +44,25 @@ def gen_prime(x):
 
     return results
 
+
+@celery_app.task
+def get_xml_price():
+
+    response = requests.get(app.config["URL_DEALER_PRICE_ZIP"])
+    file_path = "{}/tmp.zip".format(app.config["URL_DEALER_XML_FILES"])
+
+    with open(file_path, "wb") as f:
+        f.write(response.content)
+
+    with zipfile.ZipFile(file_path, "r") as zip_ref:
+        zip_ref.extractall(app.config["URL_DEALER_XML_FILES"])
+
+    os.remove(file_path)
+
+    mgs = "Success, got price xml"
+    print(mgs)
+
+    return "{}, {}".format(mgs, app.config["URL_DEALER_XML_FILES"])
 
 # @celery_app.task
 # def send_email(id, sender, recipients):
@@ -48,7 +80,6 @@ def gen_prime(x):
 #     #         msg.attach(*attachment)
 #
 #     mail.send(msg)
-
 
 
 if __name__ == '__main__':
