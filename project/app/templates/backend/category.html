@@ -1,0 +1,40 @@
+{% extends 'backend/base.html' %}
+<!--{% set active_page = 'index' %}-->
+
+{% block title %} Категории {% endblock %}
+
+{% block moderator %}
+
+    <div class="grid-container">
+        <div class="grid-x" style="padding-top: 10px">
+            <div class="medium-12 cell">
+                <p>Список категорий:</p>
+                <div class="table-scroll">
+
+                    <table class="hover">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>Категория</th>
+                                <th style="min-width: 100px;">Родитель</th>
+                                <th style="min-width: 100px;">В работе</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.id }}</td>
+                                    <td>{{ category.name }}</td>
+                                    <td>{{ category.parent_id }}</td>
+                                    <td><a href="#">В работу</a></td>
+                                <tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

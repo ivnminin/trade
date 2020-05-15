@@ -1,0 +1,47 @@
+{% extends 'backend/base.html' %}
+<!--{% set active_page = 'index' %}-->
+
+{% block title %} Задачи для Категорий {% endblock %}
+
+{% block moderator %}
+
+    <div class="grid-container">
+        <div class="grid-x" style="padding-top: 10px">
+            <div class="medium-12 cell">
+                <p>Список задач для категорий:</p>
+                <div class="table-scroll">
+
+                    <table class="hover">
+                        <thead>
+                                <th>id</th>
+                                <th>Задача</th>
+                                <th style="min-width: 80px;">Успех</th>
+                                <th style="min-width: 80px;">Изменения</th>
+                                <th style="min-width: 80px;">Добавленно</th>
+                                <th style="min-width: 80px;">Удаленно</th>
+                                <th style="min-width: 200px;">Результат</th>
+                                <th style="min-width: 80px;">Время</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                                <tr>
+                                    <td>{{ task.id }}</td>
+                                    <td>{{ task.name }}</td>
+                                    <td>{{ task.success }}</td>
+                                    <td>{{ task.changes }}</td>
+                                    <td>{{ task.added }}</td>
+                                    <td>{{ task.removed }}</td>
+                                    <td>{{ task.result_msg }}</td>
+                                    <td>{{ task.timestamp_created }}</td>
+                                <tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
