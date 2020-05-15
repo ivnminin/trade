@@ -6,30 +6,6 @@
 
 {% block moderator %}
 
-    <form method="POST" action="">
-        <div class="grid-container">
-            <br>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <div class="callout success">
-                        {% for message in messages %}
-                            <p>{{ message | safe }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-            <br>
-            <h4>Создать пользователя:</h4>
-            <hr>
-            <h5>Необходимо заполнить поля:</h5>
-            <div class="grid-x" style="padding-top: 10px">
-                <div class="medium-8 cell">
-                    <input type="submit" id="submit" class="button" value="Создать">
-                </div>
-            </div>
-        </div>
-    </form>
-    <br><br><br><br>
     <div class="grid-container">
         <div class="grid-x" style="padding-top: 10px">
             <div class="medium-6 cell">

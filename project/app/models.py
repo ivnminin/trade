@@ -96,9 +96,33 @@ class TypeDealer(enum.Enum):
         return [(choice.name, choice.value) for choice in cls]
 
 
-class Category(db.Model):
+class NameTask(enum.Enum):
+
+    updating_structure_of_catalog = "UPDATING STRUCTURE OF CATALOG"
+
+
+class Task(db.Model):
+    __tablename__ = "tasks"
+
     id = db.Column(db.Integer, primary_key=True)
-    parent_id = db.Column(db.Integer, db.ForeignKey("category.id"))
+    name = db.Column(db.String(512), nullable=False)
+    success = db.Column(db.Boolean(), default=False)
+
+    changes = db.Column(db.Boolean(), default=False)
+    added = db.Column(db.Boolean(), default=False)
+    removed = db.Column(db.Boolean(), default=False)
+
+    result_msg = db.Column(db.String(512))
+
+    timestamp_created = db.Column(db.DateTime, default=datetime.now)
+    timestamp_updated = db.Column(db.DateTime, onupdate=datetime.now)
+
+
+class Category(db.Model):
+    __tablename__ = "categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
     name = db.Column(db.String(512))
     slug = db.Column(db.String(512), unique=True)
 
