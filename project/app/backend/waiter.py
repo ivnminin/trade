@@ -139,7 +139,7 @@ def send_email(subject, body, sender, recipients):
 
     except Exception as e:
 
-        logger_app.err(NameTask.sending_email.value)
+        logger_app.error(NameTask.sending_email.value)
 
         return "failure"
 
