@@ -27,7 +27,7 @@ def index():
             flash("Запрос создан, ожидайте ответ. Спасибо.", "success")
             # return make_response(r)
 
-            return redirect(url_for("frontend.index"))
+            return redirect(url_for("index"))
         except Exception as e:
 
             logger_app.error("{} :{}".format(NameTask.sending_email.name, e))
