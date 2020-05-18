@@ -98,6 +98,12 @@ def update_category():
 
         logger_app.info(task_msg_result)
 
+        subject =  task.name
+        body = task_msg_result
+        sender = app.config["MAIL_USERNAME"]
+        recipients = [app.config["MAIL_ADMIN"], ]
+        send_email(subject, body, sender, recipients)
+
         return "success"
 
     except Exception as e:
