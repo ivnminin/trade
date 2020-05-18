@@ -15,6 +15,16 @@
                 <hr>
             </div>
             <div class="medium-6 cell">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="callout success">
+                            {% for message in messages %}
+                                <p>{{ message | safe }}</p>
+                            {% endfor %}
+                        </div>
+                        <br>
+                    {% endif %}
+                {% endwith %}
                 <form method="POST" action="">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="medium-8 cell">

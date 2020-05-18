@@ -24,6 +24,7 @@ def index():
             job = send_email.apply_async(args=[subject, body, sender, recipients], countdown=3)
             r = job.get()
 
+            flash("Запрос создан, ожидайте ответ. Спасибо.", "success")
             return make_response(r)
 
             # return redirect(url_for("frontend.index"))

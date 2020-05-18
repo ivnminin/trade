@@ -11,9 +11,11 @@ celery_app.conf.beat_schedule = {
     # Executes every Monday morning at 7:30 a.m.
     "add-every-monday-morning": {
         "task": "app.backend.waiter.update_category",
-        "schedule": crontab(minute="*/1")
+        "schedule": crontab(minute=0, hour=0)
     },
 }
+celery_app.conf.timezone = "Europe/Moscow"
+celery_app.conf.enable_utc = True
 
 
 @celery_app.task
