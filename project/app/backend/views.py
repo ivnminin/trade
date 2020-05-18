@@ -4,8 +4,8 @@ from flask import request, render_template, redirect, url_for, flash, make_respo
 from flask_login import login_required, login_user, current_user, logout_user
 from app.models import db, User, TypeDealer, NameTask, Task, Category
 from .forms import LoginForm
-from .waiter import update_category, gen_prime
-from . import NLReceiver, logger_dealer_nl
+from .waiter import update_category, test_task, send_email
+from . import logger_app
 
 
 @backend.route("/backend/", methods=["GET", "POST"])
@@ -18,7 +18,9 @@ def index():
             # # job = gen_prime(100)
             #
             # return make_response(", ".join(map(lambda x: str(x), r)))
-            job = update_category.apply_async(args=[], countdown=3)
+            # job = update_category.apply_async(args=[], countdown=3)
+
+            job = test_task.apply_async(args=[], countdown=3)
             r = job.get()
 
             return make_response(r)
@@ -46,10 +48,11 @@ def task_category():
 
         try:
             job = update_category.apply_async(args=[], countdown=3)
+
             return redirect(url_for('backend.task_category'))
         except Exception as e:
 
-            logger_dealer_nl.error("{} :{}".format(NameTask.updating_structure_of_catalog.name, e))
+            logger_app.error("{} :{}".format(NameTask.updating_structure_of_catalog.name, e))
 
     tasks = db.session.query(Task).filter(Task.name == NameTask.updating_structure_of_catalog.value)\
                                   .order_by(Task.timestamp_created.desc()).all()

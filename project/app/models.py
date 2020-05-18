@@ -98,6 +98,7 @@ class TypeDealer(enum.Enum):
 
 class NameTask(enum.Enum):
 
+    sending_email = "SENDING EMAIL"
     updating_structure_of_catalog = "UPDATING STRUCTURE OF CATALOG"
 
 

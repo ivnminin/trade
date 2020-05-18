@@ -6,8 +6,52 @@
 {% block content %}
     <div class="grid-container">
         <div class="grid-x" style="padding-top: 30px">
-            <div>
-                <p>Главная фронт</p>
+            <div class="medium-12 cell">
+                <p>Расходные материалы к принтерам и МФУ, Москва, Зеленоград</p>
+                <h5 style="padding: 15px 0;">В данный момент, каталог находиться в разработке.
+                У Вас есть возможность оформить запрос на необходимый для  Вас расходный материал.
+                Для этого необходимо заполнить форму и ожидать ответ в течении 24 часов.
+                </h5>
+                <hr>
+            </div>
+            <div class="medium-6 cell">
+                <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="medium-8 cell">
+                        <label>Ваше Имя<span style="font-size: x-small"> * - Обязательно для заполенения!</span>
+                            {{ form.name(required=False) }}
+                        </label>
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                <p class="error-title" style="color: red">{{ error }}<p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="medium-8 cell">
+                        <label>Запрос<span style="font-size: x-small"> * - Обязательно для заполенения!</span>
+                            {{ form.description(required=False) }}
+                        </label>
+                        {% if form.description.errors %}
+                            {% for error in form.description.errors %}
+                                <p class="error-title" style="color: red">{{ error }}<p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="medium-8 cell">
+                        <label>Телефон или емайл для ответа.<span style="font-size: x-small"> * - Обязательно для заполенения!</span>
+                            {{ form.contact_data(required=False) }}
+                        </label>
+                        {% if form.contact_data.errors %}
+                            {% for error in form.contact_data.errors %}
+                                <p class="error-title" style="color: red">{{ error }}<p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="medium-8 cell">
+                        <input type="submit" id="submit" class="button" value="Отправить">
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>

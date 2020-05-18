@@ -9,7 +9,7 @@
         <div class="grid-x" style="padding-top: 10px">
             <div class="medium-12 cell">
                 <form method="POST" action="">
-
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     {% with messages = get_flashed_messages() %}
                         {% if messages %}
                             <div class="callout success">
