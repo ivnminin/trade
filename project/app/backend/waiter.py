@@ -104,7 +104,7 @@ def update_category():
         db.session.add(task)
         db.session.commit()
 
-        logger_app.err(task.result_msg)
+        logger_app.error("{}: {}".format(task.name, task.result_msg))
 
         return "failure"
 
@@ -125,6 +125,8 @@ def gen_prime(x):
 @celery_app.task
 def send_email(subject, body, sender, recipients):
 
+    task = Task(name=NameTask.sending_email.value)
+
     msg = Message(subject, sender=sender, recipients=recipients)
     msg.body = body
 
@@ -139,7 +141,7 @@ def send_email(subject, body, sender, recipients):
 
     except Exception as e:
 
-        logger_app.error(NameTask.sending_email.value)
+        logger_app.error("{}: {}".format(task.name, e))
 
         return "failure"
 
