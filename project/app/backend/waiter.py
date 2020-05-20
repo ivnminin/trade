@@ -18,9 +18,20 @@ celery_app.conf.timezone = "Europe/Moscow"
 celery_app.conf.enable_utc = True
 
 
-@celery_app.task
-def test_task():
-    raise Exception("Test exception raised by celery test_task")
+@celery_app.task(bind=True)
+def test_task(self):
+    # raise Exception("Test exception raised by celery test_task")
+
+    # self.update_state(state="PROGRESS", meta={"current": 0, "total": 0})
+
+    task_id = str(self.request.id)
+    task_state = self.AsyncResult(self.request.id).state
+
+    #import time
+    #time.sleep(15)
+    import json
+
+    return json.dumps({task_id: task_id, task_state: task_state})
 
 
 @celery_app.task
@@ -29,8 +40,10 @@ def update_category():
     task = Task(name=NameTask.updating_structure_of_catalog.value)
     try:
 
-        response = NLReceiver(app.config["NL_CATEGORIES"]["URL"]
-                              .format(catalog_name=app.config["NL_CATALOG_MAIN"]),
+        import time
+        time.sleep(45)
+
+        response = NLReceiver(app.config["NL_CATEGORIES"]["URL"].format(catalog_name=app.config["NL_CATALOG_MAIN"]),
                               app.config["NL_CATEGORIES"]["DATA_KEY"])
 
         nl_error = response.error

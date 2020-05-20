@@ -1,0 +1,55 @@
+{% extends 'backend/base.html' %}
+<!--{% set active_page = 'index' %}-->
+
+{% block title %} Задачи для Категорий {% endblock %}
+
+{% block moderator %}
+
+    <div class="grid-container">
+        <div class="grid-x" style="padding-top: 10px">
+            <div class="medium-12 cell">
+                <span id="task_name" style="display: none">updating_structure_of_catalog</span>
+                <p>Текущие задачи:</p>
+                <p id="task_none">В данный момент задача для каталога не выполняется.</p>
+                <div id="task_hand" style="display: none;">
+                    <p>Задача для каталога выполняется:</p>
+                    <span class="align-center" style="display: block; margin: 15px 0;"><img src="{{ url_for('static', filename='preloader.gif') }}" alt=""></span>
+                    <p style="background-color: #eaeaea; border-radius: 5px; display: inline-block; padding: 10px;">task_id: <span id="task_id"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block  script %}
+    {{ super() }}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            var task_name = $("#task_name").text();
+
+            setInterval(function(){
+                $.ajax({
+                    type: "GET",
+                    url: "{{ url_for('hands.hand_main') }}",
+                    data: {"task_name": task_name},
+                }).done(function(response) {
+                    console.info("success!");
+                    if (response.status === "success" && response.data) {
+                        $("#task_none").hide();
+                        $("#task_hand").show();
+                        $("#task_id").text(response.data);
+                    }
+                    else {$("#task_hand").hide(); $("#task_none").show()}
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error("fail!");
+                });
+            }, 1000);
+        });
+    </script>
+
+{% endblock %}
+
