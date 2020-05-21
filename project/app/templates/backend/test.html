@@ -13,8 +13,6 @@
                 <p id="task_none">В данный момент задача для каталога не выполняется.</p>
                 <div id="task_hand" style="display: none;">
                     <p>Задача для каталога выполняется:</p>
-                    <span class="align-center" style="display: block; margin: 15px 0;"><img src="{{ url_for('static', filename='preloader.gif') }}" alt=""></span>
-                    <p style="background-color: #eaeaea; border-radius: 5px; display: inline-block; padding: 10px;">task_id: <span id="task_id"></span></p>
                 </div>
             </div>
         </div>
@@ -37,11 +35,29 @@
                     url: "{{ url_for('hands.hand_main') }}",
                     data: {"task_name": task_name},
                 }).done(function(response) {
-                    console.info("success!");
-                    if (response.status === "success" && response.data) {
+
+                    if (response.status === "success" && response.data.length > 0) {
                         $("#task_none").hide();
-                        $("#task_hand").show();
-                        $("#task_id").text(response.data);
+
+                        var div_task_hand = $("#task_hand");
+
+                        // add task element
+                        $.each(response.data, function(index, value){
+                            if ($("#" + value + "").length === 0) {
+                                var img = "<span class=\"align-center\" style=\"display: block; margin: 15px 0;\"><img src=\"{{ url_for('static', filename='preloader.gif') }}\" alt=\"\"></span>";
+                                var p = "<p style=\"background-color: #eaeaea; border-radius: 5px; display: inline-block; padding: 10px;\">task_id: <span>" + value + "</span></p>";
+                                div_task_hand.append("<div id="+ value +" class=\"task\">" + p + img + "<hr></div>")
+                            }
+                        });
+                        div_task_hand.show();
+
+                        // remove task element if not in response.data
+                        $.each($(".task"), function(index, value){
+                            if(response.data.indexOf(value.id) === -1) {
+                                value.remove()
+                            }
+                        });
+
                     }
                     else {$("#task_hand").hide(); $("#task_none").show()}
                 }).fail(function(jqXHR, textStatus, errorThrown) {

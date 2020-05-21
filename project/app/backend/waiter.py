@@ -1,3 +1,4 @@
+import redis
 from flask_mail import Message
 from celery.schedules import crontab
 
@@ -24,18 +25,25 @@ def test_task(self):
 
     # self.update_state(state="PROGRESS", meta={"current": 0, "total": 0})
 
+    task_name = NameTask.updating_structure_of_catalog.name
     task_id = str(self.request.id)
-    task_state = self.AsyncResult(self.request.id).state
+    # task_state = self.AsyncResult(self.request.id).state
 
-    #import time
-    #time.sleep(15)
-    import json
+    redis_client = redis.Redis(host="redis_trade")
+    redis_client.sadd(task_name, task_id)
 
-    return json.dumps({task_id: task_id, task_state: task_state})
+    import time
+    time.sleep(15)
+
+    redis_client.srem(task_name, task_id)
+
+    return "success"
 
 
-@celery_app.task
-def update_category():
+@celery_app.task(bind=True)
+def update_category(self):
+
+    self.update_state(meta={"current": 0, "total": 0})
 
     task = Task(name=NameTask.updating_structure_of_catalog.value)
     try:

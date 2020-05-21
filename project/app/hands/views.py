@@ -1,3 +1,4 @@
+import redis
 from datetime import datetime
 
 from celery.result import AsyncResult
@@ -18,9 +19,19 @@ def hand_main():
 
     # response = {"status": "success",
     #             "data": datetime.now() if datetime.now().second%2 == 0 else None}
-    tax_id = request.args.get("task_name")
+
+    redis_client = redis.Redis(host="redis_trade")
+    task_name = request.args.get("task_name")
+    current_tasks = [task.decode() for task in redis_client.smembers(task_name)]
+
+    # celery_result_prefix = "celery-task-meta-{}"
+    #
+    # task_id = redis_client.get("updating_structure_of_catalog")
+    # celery_result_prefix.format(task_id)
+
+
     response = {"status": "success",
-                "data": tax_id}
+                "data": current_tasks}
 
     return jsonify(response)
 
@@ -30,8 +41,8 @@ def hand_ajax():
 
     job = test_task.apply_async(args=[], countdown=3)
 
-    r = job.get()
+    # r = job.get()
+    #
+    # return make_response(r)
 
-    return make_response(r)
-
-    # return render_template("backend/test.html")
+    return render_template("backend/test.html")
