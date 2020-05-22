@@ -6,8 +6,10 @@ from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CsrfProtect
 from flask_login import LoginManager
+from flask_redis import FlaskRedis
 from werkzeug.debug import DebuggedApplication
 from celery import Celery
+
 
 import config
 
@@ -20,8 +22,8 @@ app.config.from_object(os.environ.get("FLASK_ENV") or "config.DevelopementConfig
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        backend="redis://redis_trade:6379/0",
-        broker="amqp://myuser1:mypass1@rabbitmq_trade:5672/myvhost1",
+        backend= os.environ["REDIS_URL"],
+        broker= os.environ["RABBITMQ_URL"],
     )
 
     class ContextTask(celery.Task):
@@ -41,6 +43,9 @@ db = SQLAlchemy(app)
 migrate = Migrate(app,  db)
 
 mail = Mail(app)
+
+redis_client = FlaskRedis(app)
+redis_client.init_app(app)
 
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
