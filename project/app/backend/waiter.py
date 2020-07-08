@@ -2,7 +2,7 @@ import redis
 from flask_mail import Message
 from celery.schedules import crontab
 
-from app import app, celery_app
+from app import app, celery_app, redis_client
 from app import mail
 from app.models import db, TypeDealer, NameTask, Task, Category
 from . import NLReceiver, logger_app
@@ -11,8 +11,8 @@ from . import NLReceiver, logger_app
 celery_app.conf.beat_schedule = {
     # Executes every Monday morning at 7:30 a.m.
     "add-every-monday-morning": {
-        "task": "app.backend.waiter.update_category",
-        "schedule": crontab(minute=0, hour=0)
+        "task": "app.backend.waiter.test_task",
+        "schedule": crontab(minute="*/1")
     },
 }
 celery_app.conf.timezone = "Europe/Moscow"
@@ -29,11 +29,12 @@ def test_task(self):
     task_id = str(self.request.id)
     # task_state = self.AsyncResult(self.request.id).state
 
-    redis_client = redis.Redis(host="redis_trade")
     redis_client.sadd(task_name, task_id)
 
     import time
     time.sleep(15)
+    import random
+    r = 1/random.randrange(2)
 
     redis_client.srem(task_name, task_id)
 
@@ -49,7 +50,7 @@ def update_category(self):
     try:
 
         import time
-        time.sleep(45)
+        time.sleep(15)
 
         response = NLReceiver(app.config["NL_CATEGORIES"]["URL"].format(catalog_name=app.config["NL_CATALOG_MAIN"]),
                               app.config["NL_CATEGORIES"]["DATA_KEY"])
@@ -108,16 +109,17 @@ def update_category(self):
 
         task_msg_result = "{}, turn_on_main_categories: {}".format(task_msg_result, "success")
 
+        logger_app.info(task_msg_result)
+
         task.success = True
         task.changes = True if task_result["result"]["new_category"] or \
                                task_result["result"]["old_category"] else False
         task.added = True if task_result["result"]["new_category"] else False
         task.removed = True if task_result["result"]["old_category"] else False
         task.result_msg = task_msg_result
+
         db.session.add(task)
         db.session.commit()
-
-        logger_app.info(task_msg_result)
 
         subject =  task.name
         body = task_msg_result
@@ -128,14 +130,20 @@ def update_category(self):
         return "success"
 
     except Exception as e:
+        logger_app.error("{}: {}".format(task.name, str(e)))
+
         task.success = False
         task.result_msg = str(e)
+
         db.session.add(task)
         db.session.commit()
 
-        logger_app.error("{}: {}".format(task.name, task.result_msg))
-
         return "failure"
+
+
+@celery_app.task(bind=True)
+def update_position(self):
+    pass
 
 
 @celery_app.task

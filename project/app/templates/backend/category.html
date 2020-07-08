@@ -5,6 +5,10 @@
 
 {% block moderator %}
 
+    {% block msg %}
+        {% include 'backend/_msg.html' %}
+    {% endblock %}
+
     <div class="grid-container">
         <div class="grid-x" style="padding-top: 10px">
             <div class="medium-12 cell">
@@ -26,7 +30,13 @@
                                     <td>{{ category.id }}</td>
                                     <td>{{ category.name }}</td>
                                     <td>{{ category.parent_id }}</td>
-                                    <td><a href="#">В работу</a></td>
+                                    <td>
+                                        {% if category.turn %}
+                                            <a href="{{ url_for('backend.category_turn', id=category.id, turn='off') }}">Из работы</a>
+                                        {% else %}
+                                            <a href="{{ url_for('backend.category_turn', id=category.id, turn='on') }}">В работу</a>
+                                        {% endif %}
+                                    </td>
                                 <tr>
                             {% endfor %}
                         </tbody>

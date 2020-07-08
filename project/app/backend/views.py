@@ -2,9 +2,9 @@ from app import db
 from . import backend
 from flask import request, render_template, redirect, url_for, flash, make_response, session, current_app
 from flask_login import login_required, login_user, current_user, logout_user
-from app.models import db, User, TypeDealer, NameTask, Task, Category
+from app.models import db, User, TypeDealer, NameTask, Task, Category, Position
 from .forms import LoginForm
-from .waiter import update_category, test_task, send_email
+from .waiter import update_category, update_position, test_task, send_email
 from . import logger_app
 
 
@@ -36,9 +36,34 @@ def index():
 @backend.route("/backend/category", methods=["GET", "POST"])
 def category():
 
-    categories = db.session.query(Category).all()
+    categories = db.session.query(Category).order_by(Category.id).all()
 
     return render_template("backend/category.html", categories=categories)
+
+
+@backend.route("/backend/category/turn/<id>")
+def category_turn(id):
+    category = db.session.query(Category).filter(Category.id == id).first_or_404()
+
+    if request.args.get("turn") == "on":
+        turn = True
+    else:
+        turn = False
+
+    category.turn = turn
+    db.session.add(category)
+    db.session.commit()
+
+    categories = []
+    for category in category.get_subcategories():
+        category.turn = turn
+        categories.append(category)
+
+    db.session.add_all(categories)
+    db.session.commit()
+
+    flash("Директория включена" if turn else "Директория отключена", "success")
+    return redirect(url_for("backend.category"))
 
 
 @backend.route("/backend/task/category", methods=["GET", "POST"])
@@ -49,7 +74,7 @@ def task_category():
         try:
             job = update_category.apply_async(args=[], countdown=3)
 
-            return redirect(url_for('backend.task_category'))
+            return redirect(url_for("backend.task_category"))
         except Exception as e:
 
             logger_app.error("{} :{}".format(NameTask.updating_structure_of_catalog.name, e))
@@ -58,3 +83,30 @@ def task_category():
                                   .order_by(Task.timestamp_created.desc()).all()
 
     return render_template("backend/task_category.html", tasks=tasks)
+
+
+@backend.route("/backend/position", methods=["GET", "POST"])
+def position():
+
+    positions = db.session.query(Position).order_by(Position.id).all()
+
+    return render_template("backend/position.html", positions=positions)
+
+
+@backend.route("/backend/task/position", methods=["GET", "POST"])
+def task_position():
+
+    if request.method == "POST":
+
+        try:
+            job = update_position.apply_async(args=[], countdown=3)
+
+            return redirect(url_for("backend.task_position"))
+        except Exception as e:
+
+            logger_app.error("{} :{}".format(NameTask.updating_positions.name, e))
+
+    tasks = db.session.query(Task).filter(Task.name == NameTask.updating_positions.value)\
+                                  .order_by(Task.timestamp_created.desc()).all()
+
+    return render_template("backend/task_position.html", tasks=tasks)

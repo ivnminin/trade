@@ -22,8 +22,8 @@ app.config.from_object(os.environ.get("FLASK_ENV") or "config.DevelopementConfig
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        backend= os.environ["REDIS_URL"],
-        broker= os.environ["RABBITMQ_URL"],
+        backend= app.config["REDIS_URL"],
+        broker= app.config["RABBITMQ_URL"],
     )
 
     class ContextTask(celery.Task):

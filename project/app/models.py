@@ -100,6 +100,7 @@ class NameTask(enum.Enum):
 
     sending_email = "SENDING EMAIL"
     updating_structure_of_catalog = "UPDATING STRUCTURE OF CATALOG"
+    updating_positions = "UPDATING POSITIONS"
 
 
 class Task(db.Model):
@@ -138,7 +139,7 @@ class Category(db.Model):
     dealer_operation = db.Column(db.Boolean(), default=False)
 
     children = db.relationship("Category", backref=db.backref("parent", remote_side=[id]))
-    # positions = db.relationship("Position", backref="owner")
+    positions = db.relationship("Position", backref="owner")
     name_alternative = db.Column(db.String(512))
     turn = db.Column(db.Boolean(), default=False)
     dealer = db.Column(db.Enum(TypeDealer), default=TypeDealer.local)
@@ -183,6 +184,9 @@ class Category(db.Model):
 
             for category_second in category.children:
                 categories.append(category_second)
+                if category_second.children:
+                    for category_third in category_second.children:
+                        categories.append(category_third)
 
         return categories
 
@@ -197,3 +201,156 @@ class Category(db.Model):
                    nl_goods=el["goods"],
                    dealer=TypeDealer.nl_dealer,
                    parent_id=parent.id)
+
+
+class Position(db.Model):
+    __tablename__ = "positions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
+    name = db.Column(db.String(1024))
+    slug = db.Column(db.String(1024), unique=True)
+
+    nl_pn = db.Column(db.String(64))
+    nl_id = db.Column(db.Integer, unique=True)
+    nl_nds = db.Column(db.String(64))
+    nl_weight = db.Column(db.String(64))
+    nl_warranty = db.Column(db.String(64))
+    nl_transit_date = db.Column(db.String(64), nullable=True)
+    nl_transit_count = db.Column(db.Numeric(10, 2))
+    nl_count_kalujskaya = db.Column(db.Numeric(10, 2))
+    nl_count_kurskaya = db.Column(db.Numeric(10, 2))
+    nl_count_lobnenskaya = db.Column(db.Numeric(10, 2))
+    nl_volume = db.Column(db.Numeric(10, 6))
+    nl_manufacturer = db.Column(db.String(1024))
+    nl_discontinued = db.Column(db.Boolean())
+    nl_removed = db.Column(db.Boolean())
+    nl_remote_warehouse = db.Column(db.String(64))
+    nl_price_by_category_a = db.Column(db.Numeric(10, 2))
+    nl_price_by_category_b = db.Column(db.Numeric(10, 2))
+    nl_price_by_category_c = db.Column(db.Numeric(10, 2))
+    nl_price_by_category_d = db.Column(db.Numeric(10, 2))
+    nl_price_by_category_e = db.Column(db.Numeric(10, 2))
+    nl_price_by_category_f = db.Column(db.Numeric(10, 2))
+    nl_price_by_category_n = db.Column(db.Numeric(10, 2))
+
+    # characteristics = db.relationship('Characteristic', backref='owner')
+    # images = db.relationship('Image', secondary=association_table_image_for_position)
+    price = db.Column(db.Numeric(10, 0))
+    count = db.Column(db.Integer)
+
+    name_alternative = db.Column(db.String(1024), nullable=True)
+    turn = db.Column(db.Boolean(), default=True)
+    # dealer = db.Column(db.Enum(TypeDealer), default=TypeDealer.local)
+    timestamp_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, index=True, onupdate=datetime.utcnow)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<Position {}>'.format(self.name)
+
+    @property
+    def get_name(self):
+        return self.name if not self.name_alternative else self.name_alternative
+
+    @property
+    def get_image(self):
+        return 'default.jpg'
+
+    @property
+    def get_price(self):
+        return '{} руб.'.format(self.price)
+
+    # @property
+    # def next_date_price_change(self):
+    #     settings = Setting.query.order_by(Setting.id.desc()).first()
+    #     delta = settings.price_next_date_update - datetime.utcnow()
+    #     delta_days = delta.days
+    #     if delta_days <= 0:
+    #         return 'завтра'
+    #     elif delta_days and str(delta_days)[-1] == '1':
+    #         return 'через {} день'.format(delta_days)
+    #     elif delta_days and str(delta_days)[-1] in ('2', '3', '4'):
+    #         return 'через {} дня'.format(delta_days)
+    #     return 'через {} дней'.format(delta_days)
+
+    # def _filter_characteristics(self, characteristics):
+    #     characteristics_after_filter = [characteristic for characteristic in characteristics if characteristic.turn]
+    #     def find_position_characteristic(name):
+    #         try:
+    #             p = [characteristic.name for characteristic in characteristics_after_filter]
+    #             position_characteristic = p.index(name)
+    #         except ValueError:
+    #             pass
+    #         else:
+    #             return position_characteristic
+    #
+    #     item = find_position_characteristic('сайт производителя')
+    #     if item:
+    #         characteristics_after_filter.append(characteristics_after_filter.pop(item))
+    #
+    #     def change_position(item):
+    #         characteristics_after_filter.insert(0, characteristics_after_filter.pop(item))
+    #
+    #
+    #     item = find_position_characteristic('описание')
+    #     if item:
+    #         change_position(item)
+    #
+    #     item = find_position_characteristic('Назначение')
+    #     if item:
+    #         change_position(item)
+    #
+    #     item = find_position_characteristic('название')
+    #     if item:
+    #         change_position(item)
+    #
+    #     return characteristics_after_filter
+    #
+    # def get_characteristics(self):
+    #
+    #     return self._filter_characteristics(self.characteristics)
+    #
+    # @staticmethod
+    # def get_len_el_to_db(category_has_positions):
+    #     return len(category_has_positions['goods'])
+    #
+    # @classmethod
+    # def gen_el_to_db(cls, category_has_positions):
+    #     if category_has_positions and category_has_positions['leaf']:
+    #         if not category_has_positions.get('id'):
+    #             raise Exception(str('not category_has_positions[id]'))
+    #         positions = category_has_positions['goods']
+    #         owner = Category.query.filter_by(nl_id=category_has_positions['id']).first()
+    #         for position in positions:
+    #             position = position['properties']
+    #
+    #             yield cls(owner=owner,
+    #                       name=position['название'],
+    #                       slug=slugify_unique_position(position['название']),
+    #                       nl_pn=position['PN'],
+    #                       nl_id=int(position['id']),
+    #                       nl_nds=position['НДС'],
+    #                       nl_weight=position['вес, кг'],
+    #                       nl_warranty=position['гарантия'],
+    #                       nl_transit_date=position['дата транзита'],
+    #                       nl_transit_count=position['количество в транзите'],
+    #                       nl_count_kalujskaya=position['количество на Калужской'],
+    #                       nl_count_kurskaya=position['количество на Курской'],
+    #                       nl_count_lobnenskaya=position['количество на Лобненской'],
+    #                       nl_volume=position['объём, м^3'],
+    #                       nl_manufacturer=position['производитель'],
+    #                       nl_discontinued=position['снят с производства'],
+    #                       nl_removed=position['удален'],
+    #                       nl_remote_warehouse=position['удаленный склад'],
+    #                       nl_price_by_category_a=position['цена по категории A'],
+    #                       nl_price_by_category_b=position['цена по категории B'],
+    #                       nl_price_by_category_c=position['цена по категории C'],
+    #                       nl_price_by_category_d=position['цена по категории D'],
+    #                       nl_price_by_category_e=position['цена по категории E'],
+    #                       nl_price_by_category_f=position['цена по категории F'],
+    #                       nl_price_by_category_n=position['цена по категории N'],
+    #                       dealer=TypeDealer.nl_dealer,
+    #                       )
