@@ -1,4 +1,4 @@
-import enum
+import enum, random
 from datetime import datetime
 from slugify import UniqueSlugify, CYRILLIC
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -74,16 +74,6 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return "<{}:{}>".format(self.id, self.username)
-    
-
-def slug_unique_check_category(text, uids):
-    if text in uids:
-        return False
-    return not Category.query.filter_by(slug=text).first()
-
-
-slugify_unique_category = UniqueSlugify(unique_check=slug_unique_check_category, to_lower=True,
-                                        max_length = 512, pretranslate=CYRILLIC)
 
 
 class TypeDealer(enum.Enum):
@@ -118,6 +108,16 @@ class Task(db.Model):
 
     timestamp_created = db.Column(db.DateTime, default=datetime.now)
     timestamp_updated = db.Column(db.DateTime, onupdate=datetime.now)
+
+
+def slug_unique_check_category(text, uids):
+    if text in uids:
+        return False
+    return not Category.query.filter_by(slug=text).first()
+
+
+slugify_unique_category = UniqueSlugify(unique_check=slug_unique_check_category, to_lower=True,
+                                        max_length = 512, pretranslate=CYRILLIC)
 
 
 class Category(db.Model):
@@ -159,14 +159,14 @@ class Category(db.Model):
     #     for position in self.positions:
     #         self.positions
 
-    # def get_subcategories_have_leaves(self):
-    #     categories_have_leaves = []
-    #     for child in self.children:
-    #         for category_has_leaves in child.children:
-    #            if category_has_leaves and category_has_leaves.nl_leaf:
-    #                categories_have_leaves.append(category_has_leaves)
-    #
-    #     return categories_have_leaves
+    def get_subcategories_have_leaves(self):
+        categories_have_leaves = []
+        for child in self.children:
+            for category_has_leaves in child.children:
+               if category_has_leaves and category_has_leaves.nl_leaf:
+                   categories_have_leaves.append(category_has_leaves)
+
+        return categories_have_leaves
 
     # def get_positions(self):
     #     positions = []
@@ -203,13 +203,24 @@ class Category(db.Model):
                    parent_id=parent.id)
 
 
+def slug_unique_check_position(text, uids):
+    if text in uids:
+        return False
+    return not Position.query.filter_by(slug=text).first()
+
+
+slugify_unique_position = UniqueSlugify(unique_check=slug_unique_check_position, to_lower=True,
+                                        max_length = 1024, pretranslate=CYRILLIC)
+
+
 class Position(db.Model):
     __tablename__ = "positions"
 
     id = db.Column(db.Integer, primary_key=True)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
     name = db.Column(db.String(1024))
     slug = db.Column(db.String(1024), unique=True)
+    article = db.Column(db.String(12), unique=True)
 
     nl_pn = db.Column(db.String(64))
     nl_id = db.Column(db.Integer, unique=True)
@@ -234,8 +245,8 @@ class Position(db.Model):
     nl_price_by_category_f = db.Column(db.Numeric(10, 2))
     nl_price_by_category_n = db.Column(db.Numeric(10, 2))
 
-    # characteristics = db.relationship('Characteristic', backref='owner')
-    # images = db.relationship('Image', secondary=association_table_image_for_position)
+    # characteristics = db.relationship("Characteristic", backref="owner")
+    # images = db.relationship("Image", secondary=association_table_image_for_position)
     price = db.Column(db.Numeric(10, 0))
     count = db.Column(db.Integer)
 
@@ -249,7 +260,7 @@ class Position(db.Model):
         return self.name
 
     def __repr__(self):
-        return '<Position {}>'.format(self.name)
+        return "<Position {}>".format(self.name)
 
     @property
     def get_name(self):
@@ -257,11 +268,11 @@ class Position(db.Model):
 
     @property
     def get_image(self):
-        return 'default.jpg'
+        return "default.jpg"
 
     @property
     def get_price(self):
-        return '{} руб.'.format(self.price)
+        return "{} руб.".format(self.price)
 
     # @property
     # def next_date_price_change(self):
@@ -269,12 +280,12 @@ class Position(db.Model):
     #     delta = settings.price_next_date_update - datetime.utcnow()
     #     delta_days = delta.days
     #     if delta_days <= 0:
-    #         return 'завтра'
-    #     elif delta_days and str(delta_days)[-1] == '1':
-    #         return 'через {} день'.format(delta_days)
-    #     elif delta_days and str(delta_days)[-1] in ('2', '3', '4'):
-    #         return 'через {} дня'.format(delta_days)
-    #     return 'через {} дней'.format(delta_days)
+    #         return "завтра"
+    #     elif delta_days and str(delta_days)[-1] == "1":
+    #         return "через {} день".format(delta_days)
+    #     elif delta_days and str(delta_days)[-1] in ("2", "3", "4"):
+    #         return "через {} дня".format(delta_days)
+    #     return "через {} дней".format(delta_days)
 
     # def _filter_characteristics(self, characteristics):
     #     characteristics_after_filter = [characteristic for characteristic in characteristics if characteristic.turn]
@@ -287,7 +298,7 @@ class Position(db.Model):
     #         else:
     #             return position_characteristic
     #
-    #     item = find_position_characteristic('сайт производителя')
+    #     item = find_position_characteristic("сайт производителя")
     #     if item:
     #         characteristics_after_filter.append(characteristics_after_filter.pop(item))
     #
@@ -295,15 +306,15 @@ class Position(db.Model):
     #         characteristics_after_filter.insert(0, characteristics_after_filter.pop(item))
     #
     #
-    #     item = find_position_characteristic('описание')
+    #     item = find_position_characteristic("описание")
     #     if item:
     #         change_position(item)
     #
-    #     item = find_position_characteristic('Назначение')
+    #     item = find_position_characteristic("Назначение")
     #     if item:
     #         change_position(item)
     #
-    #     item = find_position_characteristic('название')
+    #     item = find_position_characteristic("название")
     #     if item:
     #         change_position(item)
     #
@@ -313,44 +324,58 @@ class Position(db.Model):
     #
     #     return self._filter_characteristics(self.characteristics)
     #
-    # @staticmethod
-    # def get_len_el_to_db(category_has_positions):
-    #     return len(category_has_positions['goods'])
-    #
-    # @classmethod
-    # def gen_el_to_db(cls, category_has_positions):
-    #     if category_has_positions and category_has_positions['leaf']:
-    #         if not category_has_positions.get('id'):
-    #             raise Exception(str('not category_has_positions[id]'))
-    #         positions = category_has_positions['goods']
-    #         owner = Category.query.filter_by(nl_id=category_has_positions['id']).first()
-    #         for position in positions:
-    #             position = position['properties']
-    #
-    #             yield cls(owner=owner,
-    #                       name=position['название'],
-    #                       slug=slugify_unique_position(position['название']),
-    #                       nl_pn=position['PN'],
-    #                       nl_id=int(position['id']),
-    #                       nl_nds=position['НДС'],
-    #                       nl_weight=position['вес, кг'],
-    #                       nl_warranty=position['гарантия'],
-    #                       nl_transit_date=position['дата транзита'],
-    #                       nl_transit_count=position['количество в транзите'],
-    #                       nl_count_kalujskaya=position['количество на Калужской'],
-    #                       nl_count_kurskaya=position['количество на Курской'],
-    #                       nl_count_lobnenskaya=position['количество на Лобненской'],
-    #                       nl_volume=position['объём, м^3'],
-    #                       nl_manufacturer=position['производитель'],
-    #                       nl_discontinued=position['снят с производства'],
-    #                       nl_removed=position['удален'],
-    #                       nl_remote_warehouse=position['удаленный склад'],
-    #                       nl_price_by_category_a=position['цена по категории A'],
-    #                       nl_price_by_category_b=position['цена по категории B'],
-    #                       nl_price_by_category_c=position['цена по категории C'],
-    #                       nl_price_by_category_d=position['цена по категории D'],
-    #                       nl_price_by_category_e=position['цена по категории E'],
-    #                       nl_price_by_category_f=position['цена по категории F'],
-    #                       nl_price_by_category_n=position['цена по категории N'],
-    #                       dealer=TypeDealer.nl_dealer,
-    #                       )
+    @staticmethod
+    def get_len_el_to_db(category_has_positions):
+        return len(category_has_positions["goods"])
+
+
+    @classmethod
+    def _generation_article(cls):
+        symbols = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                   "A", "B", "C", "D", "E", "F"]
+        article = "".join(random.choices(symbols, k=7))
+
+        if db.session.query(cls).filter(cls.article == article).first():
+            return cls._generation_article()
+        else:
+            return article
+
+
+    @classmethod
+    def gen_el_to_db(cls, category_has_positions):
+        if category_has_positions and category_has_positions["leaf"]:
+            if not category_has_positions.get("id"):
+                raise Exception(str("not category_has_positions[id]"))
+            positions = category_has_positions["goods"]
+            owner = Category.query.filter_by(nl_id=category_has_positions["id"]).first()
+            for position in positions:
+                position = position["properties"]
+
+                yield cls(owner=owner,
+                          name=position["название"],
+                          slug=slugify_unique_position(position["название"]),
+                          article=cls._generation_article(),
+                          nl_pn=position["PN"],
+                          nl_id=int(position["id"]),
+                          nl_nds=position["НДС"],
+                          nl_weight=position["вес, кг"],
+                          nl_warranty=position["гарантия"],
+                          nl_transit_date=position["дата транзита"],
+                          nl_transit_count=position["количество в транзите"],
+                          nl_count_kalujskaya=position["количество на Калужской"],
+                          nl_count_kurskaya=position["количество на Курской"],
+                          nl_count_lobnenskaya=position["количество на Лобненской"],
+                          nl_volume=position["объём, м^3"],
+                          nl_manufacturer=position["производитель"],
+                          nl_discontinued=position["снят с производства"],
+                          nl_removed=position["удален"],
+                          nl_remote_warehouse=position["удаленный склад"],
+                          nl_price_by_category_a=position["цена по категории A"],
+                          nl_price_by_category_b=position["цена по категории B"],
+                          nl_price_by_category_c=position["цена по категории C"],
+                          nl_price_by_category_d=position["цена по категории D"],
+                          nl_price_by_category_e=position["цена по категории E"],
+                          nl_price_by_category_f=position["цена по категории F"],
+                          nl_price_by_category_n=position["цена по категории N"],
+                          # dealer=TypeDealer.nl_dealer,
+                          )

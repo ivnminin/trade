@@ -1,0 +1,48 @@
+{% extends 'backend/base.html' %}
+<!--{% set active_page = 'index' %}-->
+
+{% block title %} Категории {% endblock %}
+
+{% block moderator %}
+
+    {% block msg %}
+        {% include 'backend/_msg.html' %}
+    {% endblock %}
+
+    <!--<div class="grid-container">-->
+        <!--<div class="grid-x" style="padding-top: 10px">-->
+            <div class="medium-12 cell">
+                <p>Список позиций:</p>
+                <div >
+
+                    <table class="hover">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>id</th>
+                                <th>Позиция</th>
+                                <th style="min-width: 100px;">Артикул</th>
+                                <th style="min-width: 100px;">В работе</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for position in positions %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ position.id }}</td>
+                                    <td>{{ position.name }}</td>
+                                    <td>{{ position.article }}</td>
+                                    <td>
+                                        <a href="#">В работе</a>
+                                    </td>
+                                <tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        <!--</div>-->
+    <!--</div>-->
+
+{% endblock %}

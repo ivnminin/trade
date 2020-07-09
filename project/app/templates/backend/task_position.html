@@ -1,0 +1,64 @@
+{% extends 'backend/base.html' %}
+<!--{% set active_page = 'index' %}-->
+
+{% block title %} Задачи для позиций {% endblock %}
+
+{% block moderator %}
+
+    <div class="grid-container">
+        <div class="grid-x" style="padding-top: 10px">
+            <div class="medium-12 cell">
+                <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="callout success">
+                                {% for message in messages %}
+                                    <p>{{ message | safe }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    <div class="menu align-right">
+                        <input type="submit" id="submit" class="button" value="Запусить задачу">
+                    </div>
+                </form>
+            </div>
+            <div class="medium-12 cell">
+                <p>Список задач для позиций:</p>
+                <div class="table-scroll">
+
+                    <table class="hover">
+                        <thead>
+                                <th>id</th>
+                                <th>Задача</th>
+                                <th style="min-width: 80px;">Успех</th>
+                                <th style="min-width: 80px;">Изменения</th>
+                                <th style="min-width: 80px;">Добавленно</th>
+                                <th style="min-width: 80px;">Удаленно</th>
+                                <th style="min-width: 200px;">Результат</th>
+                                <th style="min-width: 80px;">Время</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                                <tr>
+                                    <td>{{ task.id }}</td>
+                                    <td>{{ task.name }}</td>
+                                    <td>{{ task.success }}</td>
+                                    <td>{{ task.changes }}</td>
+                                    <td>{{ task.added }}</td>
+                                    <td>{{ task.removed }}</td>
+                                    <td>{{ task.result_msg }}</td>
+                                    <td>{{ task.timestamp_created }}</td>
+                                <tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

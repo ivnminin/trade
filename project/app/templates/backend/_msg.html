@@ -1,0 +1,11 @@
+<br>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="callout success" style="margin: 30px;">
+                {% for message in messages %}
+                    <p>{{ message | safe }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+<br>

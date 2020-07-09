@@ -1,6 +1,6 @@
 from app import db
 from . import backend
-from flask import request, render_template, redirect, url_for, flash, make_response, session, current_app
+from flask import request, render_template, redirect, url_for, flash, make_response, session, current_app, jsonify
 from flask_login import login_required, login_user, current_user, logout_user
 from app.models import db, User, TypeDealer, NameTask, Task, Category, Position
 from .forms import LoginForm
@@ -98,13 +98,24 @@ def task_position():
 
     if request.method == "POST":
 
-        try:
-            job = update_position.apply_async(args=[], countdown=3)
+        from . import NLReceiver, logger_app
 
-            return redirect(url_for("backend.task_position"))
-        except Exception as e:
+        categories_have_positions = db.session.query(Category).filter(Category.turn, Category.nl_leaf).all()
+        for category in categories_have_positions:
+            response = NLReceiver(current_app.config['NL_GOODS']['URL'].format(
+                                                                    catalog_name=current_app.config["NL_CATALOG_MAIN"],
+                                                                    category_id=category.nl_id),
+                                  current_app.config['NL_GOODS']['DATA_KEY'])
 
-            logger_app.error("{} :{}".format(NameTask.updating_positions.name, e))
+            for position in Position.gen_el_to_db(response.data):
+                try:
+                    db.session.add(position)
+                    db.session.commit()
+                except Exception as e:
+                    print(e)
+                    db.session.rollback()
+
+        # return jsonify(response.data)
 
     tasks = db.session.query(Task).filter(Task.name == NameTask.updating_positions.value)\
                                   .order_by(Task.timestamp_created.desc()).all()
