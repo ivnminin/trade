@@ -245,7 +245,7 @@ class Position(db.Model):
     nl_price_by_category_f = db.Column(db.Numeric(10, 2))
     nl_price_by_category_n = db.Column(db.Numeric(10, 2))
 
-    # characteristics = db.relationship("Characteristic", backref="owner")
+    characteristics = db.relationship("Characteristic", backref="owner")
     # images = db.relationship("Image", secondary=association_table_image_for_position)
     price = db.Column(db.Numeric(10, 0))
     count = db.Column(db.Integer)
@@ -342,8 +342,33 @@ class Position(db.Model):
 
 
     @classmethod
+    def update_position(cls, position):
+
+        position_for_update = db.session.query(cls).filter(cls.nl_id == position.nl_id).first()
+        position_for_update.nl_transit_date = position.nl_transit_date
+        position_for_update.nl_transit_count = position.nl_transit_count
+        position_for_update.nl_count_kalujskaya = position.nl_count_kalujskaya
+        position_for_update.nl_count_kurskaya = position.nl_count_kurskaya
+        position_for_update.nl_count_lobnenskaya = position.nl_count_lobnenskaya
+        position_for_update.nl_volume = position.nl_volume
+        position_for_update.nl_manufacturer = position.nl_manufacturer
+        position_for_update.nl_discontinued = position.nl_discontinued
+        position_for_update.nl_removed = position.nl_removed
+        position_for_update.nl_remote_warehouse = position.nl_remote_warehouse
+        position_for_update.nl_price_by_category_a = position.nl_price_by_category_a
+        position_for_update.nl_price_by_category_b = position.nl_price_by_category_b
+        position_for_update.nl_price_by_category_c = position.nl_price_by_category_c
+        position_for_update.nl_price_by_category_d = position.nl_price_by_category_d
+        position_for_update.nl_price_by_category_e = position.nl_price_by_category_e
+        position_for_update.nl_price_by_category_f = position.nl_price_by_category_f
+        position_for_update.nl_price_by_category_n = position.nl_price_by_category_n
+
+        return position_for_update
+
+
+    @classmethod
     def gen_el_to_db(cls, category_has_positions):
-        if category_has_positions and category_has_positions["leaf"]:
+        if category_has_positions and category_has_positions.get("leaf"):
             if not category_has_positions.get("id"):
                 raise Exception(str("not category_has_positions[id]"))
             positions = category_has_positions["goods"]
@@ -379,3 +404,28 @@ class Position(db.Model):
                           nl_price_by_category_n=position["цена по категории N"],
                           # dealer=TypeDealer.nl_dealer,
                           )
+
+
+class Characteristic(db.Model):
+    __tablename__ = "characteristics"
+
+    id = db.Column(db.Integer, primary_key=True)
+    position_id = db.Column(db.Integer, db.ForeignKey("positions.id"))
+    name = db.Column(db.String(1024))
+    value = db.Column(db.String(5120))
+    turn = db.Column(db.Boolean(), default=True)
+    # dealer = db.Column(db.Enum(TypeDealer), default=TypeDealer.local)
+    timestamp_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, index=True, onupdate=datetime.utcnow)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Characteristic {}>".format(self.name)
+
+    @classmethod
+    def gen_el_to_db(cls, position, position_has_characteristics):
+        if position_has_characteristics.get("properties"):
+            for name, value in position_has_characteristics["properties"].items():
+                yield cls(owner=position, name=name, value=value)

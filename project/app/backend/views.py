@@ -2,7 +2,7 @@ from app import db
 from . import backend
 from flask import request, render_template, redirect, url_for, flash, make_response, session, current_app, jsonify
 from flask_login import login_required, login_user, current_user, logout_user
-from app.models import db, User, TypeDealer, NameTask, Task, Category, Position
+from app.models import db, User, TypeDealer, NameTask, Task, Category, Position, Characteristic
 from .forms import LoginForm
 from .waiter import update_category, update_position, test_task, send_email
 from . import logger_app
@@ -102,19 +102,42 @@ def task_position():
 
         categories_have_positions = db.session.query(Category).filter(Category.turn, Category.nl_leaf).all()
         for category in categories_have_positions:
-            response = NLReceiver(current_app.config['NL_GOODS']['URL'].format(
+            response = NLReceiver(current_app.config["NL_GOODS"]["URL"].format(
                                                                     catalog_name=current_app.config["NL_CATALOG_MAIN"],
                                                                     category_id=category.nl_id),
-                                  current_app.config['NL_GOODS']['DATA_KEY'])
+                                  current_app.config["NL_GOODS"]["DATA_KEY"])
 
             for position in Position.gen_el_to_db(response.data):
                 try:
                     db.session.add(position)
                     db.session.commit()
+
+                    #########################
+                    # This place GET characteristics to position
+                    response = NLReceiver(current_app.config["NL_GOOD"]["URL"].format(
+                                                                catalog_name=current_app.config["NL_CATALOG_MAIN"],
+                                                                category_id=category.nl_id,
+                                                                position_id=position.nl_id),
+                                    current_app.config["NL_GOOD"]["DATA_KEY"])
+
+                    characteristics = Characteristic.gen_el_to_db(position, response.data) or {}
+                    for characteristic in characteristics:
+                        db.session.add(characteristic)
+                        try:
+                            db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+
                 except Exception as e:
                     print(e)
                     db.session.rollback()
-
+                    position_update = Position.update_position(position)
+                    try:
+                        db.session.add(position_update)
+                        db.session.commit()
+                    except Exception as e:
+                        print("ERROR ___________")
+                        db.session.rollback()
         # return jsonify(response.data)
 
     tasks = db.session.query(Task).filter(Task.name == NameTask.updating_positions.value)\
