@@ -203,6 +203,12 @@ class Category(db.Model):
                    parent_id=parent.id)
 
 
+association_table_image_for_position = db.Table("association_table_image_for_position",
+    db.Column("position_id", db.Integer, db.ForeignKey("positions.id", ondelete="cascade")),
+    db.Column("image_id", db.Integer, db.ForeignKey("images.id", ondelete="cascade"))
+)
+
+
 def slug_unique_check_position(text, uids):
     if text in uids:
         return False
@@ -246,7 +252,7 @@ class Position(db.Model):
     nl_price_by_category_n = db.Column(db.Numeric(10, 2))
 
     characteristics = db.relationship("Characteristic", backref="owner")
-    # images = db.relationship("Image", secondary=association_table_image_for_position)
+    images = db.relationship("Image", secondary=association_table_image_for_position)
     price = db.Column(db.Numeric(10, 0))
     count = db.Column(db.Integer)
 
@@ -410,7 +416,7 @@ class Characteristic(db.Model):
     __tablename__ = "characteristics"
 
     id = db.Column(db.Integer, primary_key=True)
-    position_id = db.Column(db.Integer, db.ForeignKey("positions.id"))
+    position_id = db.Column(db.Integer, db.ForeignKey("positions.id", ondelete="cascade"))
     name = db.Column(db.String(1024))
     value = db.Column(db.String(5120))
     turn = db.Column(db.Boolean(), default=True)
@@ -429,3 +435,21 @@ class Characteristic(db.Model):
         if position_has_characteristics.get("properties"):
             for name, value in position_has_characteristics["properties"].items():
                 yield cls(owner=position, name=name, value=value)
+
+
+class Image(db.Model):
+    __tablename__ = "images"
+
+    id = db.Column(db.Integer, primary_key=True)
+    original_name = db.Column(db.String(255), nullable=True)
+    name = db.Column(db.String(255))
+    hash = db.Column(db.String(255))
+    turn = db.Column(db.Boolean(), default=True)
+    timestamp_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, index=True, onupdate=datetime.utcnow)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Image {}>".format(self.name)

@@ -2,7 +2,7 @@ from app import db
 from . import backend
 from flask import request, render_template, redirect, url_for, flash, make_response, session, current_app, jsonify
 from flask_login import login_required, login_user, current_user, logout_user
-from app.models import db, User, TypeDealer, NameTask, Task, Category, Position, Characteristic
+from app.models import db, User, TypeDealer, NameTask, Task, Category, Position, Characteristic, Image
 from .forms import LoginForm
 from .waiter import update_category, update_position, test_task, send_email
 from . import logger_app
@@ -127,6 +127,34 @@ def task_position():
                             db.session.commit()
                         except Exception as e:
                             db.session.rollback()
+
+                    #########################
+                    # This place GET image to position
+                    response = NLReceiver(current_app.config["NL_IMG_GOOD"]["URL"].format(goodsId=position.nl_id),
+                                          current_app.config["NL_IMG_GOOD"]["DATA_KEY"])
+                    import requests, hashlib, os
+
+                    m = hashlib.md5()
+                    if not response.data:
+                        with open(current_app.config["DEFAULT_IMAGE_FOR_CATALOG"], "rb") as response_image:
+                            response_image_content = response_image.read()
+                            m.update(response_image_content)
+                    else:
+                        url_image = response.data["items"][0]["properties"]["Url"]
+                        response_image = requests.get(
+                            url_image.rsplit("&", 1)[0] + current_app.config["LOGOTYPE"])  # it is string fot URL
+                        response_image_content = response_image.content
+                        m.update(response_image_content)
+
+                    hash_image = m.hexdigest()
+                    image_name = hash_image + ".jpg"
+                    with open(os.path.join(current_app.config["UPLOAD_FOLDER"], image_name), "wb") as f:
+                        f.write(response_image_content)
+
+                    image = Image(original_name=image_name, name=image_name, hash=hash_image)
+                    position.images.append(image)
+                    db.session.add(position)
+                    db.session.commit()
 
                 except Exception as e:
                     print(e)
