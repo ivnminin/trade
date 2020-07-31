@@ -444,6 +444,7 @@ class Image(db.Model):
     original_name = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(255))
     hash = db.Column(db.String(255))
+    path = db.Column(db.String(255))
     turn = db.Column(db.Boolean(), default=True)
     timestamp_created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, index=True, onupdate=datetime.utcnow)

@@ -147,24 +147,34 @@ def task_position():
                         m.update(response_image_content)
 
                     hash_image = m.hexdigest()
-                    image_name = hash_image + ".jpg"
-                    with open(os.path.join(current_app.config["UPLOAD_FOLDER"], image_name), "wb") as f:
-                        f.write(response_image_content)
+                    image = db.session.query(Image).filter(Image.hash==hash_image).first()
+                    if not image:
+                        sub_folder_name = hash_image[0:2]
+                        sub_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], sub_folder_name)
+                        if not os.path.exists(sub_folder):
+                            os.mkdir(sub_folder)
 
-                    image = Image(original_name=image_name, name=image_name, hash=hash_image)
+                        image_name = hash_image + ".jpg"
+                        path_to_image = os.path.join(sub_folder, image_name)
+                        with open(path_to_image, "wb") as f:
+                            f.write(response_image_content)
+
+                        image = Image(original_name=image_name, name=image_name, hash=hash_image,
+                                      path=os.path.join(sub_folder_name, image_name))
+
                     position.images.append(image)
                     db.session.add(position)
                     db.session.commit()
 
                 except Exception as e:
-                    print(e)
+                    # logger_app.error("{}: {}".format("Add Position: ", str(e)))
                     db.session.rollback()
                     position_update = Position.update_position(position)
                     try:
                         db.session.add(position_update)
                         db.session.commit()
                     except Exception as e:
-                        print("ERROR ___________")
+                        logger_app.error("{}: {}".format("Update Position: ", str(e)))
                         db.session.rollback()
         # return jsonify(response.data)
 
