@@ -104,7 +104,7 @@ class Task(db.Model):
     added = db.Column(db.Boolean(), default=False)
     removed = db.Column(db.Boolean(), default=False)
 
-    result_msg = db.Column(db.String(51200))
+    result_msg = db.Column(db.String(512000))
 
     timestamp_created = db.Column(db.DateTime, default=datetime.now)
     timestamp_updated = db.Column(db.DateTime, onupdate=datetime.now)

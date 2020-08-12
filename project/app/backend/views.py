@@ -97,86 +97,13 @@ def position():
 def task_position():
 
     if request.method == "POST":
+        try:
+            job = update_position.apply_async(args=[], countdown=3)
 
-        from . import NLReceiver, logger_app
+            return redirect(url_for("backend.task_position"))
+        except Exception as e:
 
-        categories_have_positions = db.session.query(Category).filter(Category.turn, Category.nl_leaf).all()
-        for category in categories_have_positions:
-            response = NLReceiver(current_app.config["NL_GOODS"]["URL"].format(
-                                                                    catalog_name=current_app.config["NL_CATALOG_MAIN"],
-                                                                    category_id=category.nl_id),
-                                  current_app.config["NL_GOODS"]["DATA_KEY"])
-
-            for position in Position.gen_el_to_db(response.data):
-                try:
-                    db.session.add(position)
-                    db.session.commit()
-
-                    #########################
-                    # This place GET characteristics to position
-                    response = NLReceiver(current_app.config["NL_GOOD"]["URL"].format(
-                                                                catalog_name=current_app.config["NL_CATALOG_MAIN"],
-                                                                category_id=category.nl_id,
-                                                                position_id=position.nl_id),
-                                    current_app.config["NL_GOOD"]["DATA_KEY"])
-
-                    characteristics = Characteristic.gen_el_to_db(position, response.data) or {}
-                    for characteristic in characteristics:
-                        db.session.add(characteristic)
-                        try:
-                            db.session.commit()
-                        except Exception as e:
-                            db.session.rollback()
-
-                    #########################
-                    # This place GET image to position
-                    response = NLReceiver(current_app.config["NL_IMG_GOOD"]["URL"].format(goodsId=position.nl_id),
-                                          current_app.config["NL_IMG_GOOD"]["DATA_KEY"])
-                    import requests, hashlib, os
-
-                    m = hashlib.md5()
-                    if not response.data:
-                        with open(current_app.config["DEFAULT_IMAGE_FOR_CATALOG"], "rb") as response_image:
-                            response_image_content = response_image.read()
-                            m.update(response_image_content)
-                    else:
-                        url_image = response.data["items"][0]["properties"]["Url"]
-                        response_image = requests.get(
-                            url_image.rsplit("&", 1)[0] + current_app.config["LOGOTYPE"])  # it is string fot URL
-                        response_image_content = response_image.content
-                        m.update(response_image_content)
-
-                    hash_image = m.hexdigest()
-                    image = db.session.query(Image).filter(Image.hash==hash_image).first()
-                    if not image:
-                        sub_folder_name = hash_image[0:2]
-                        sub_folder = os.path.join(current_app.config["UPLOAD_FOLDER"], sub_folder_name)
-                        if not os.path.exists(sub_folder):
-                            os.mkdir(sub_folder)
-
-                        image_name = hash_image + ".jpg"
-                        path_to_image = os.path.join(sub_folder, image_name)
-                        with open(path_to_image, "wb") as f:
-                            f.write(response_image_content)
-
-                        image = Image(original_name=image_name, name=image_name, hash=hash_image,
-                                      path=os.path.join(sub_folder_name, image_name))
-
-                    position.images.append(image)
-                    db.session.add(position)
-                    db.session.commit()
-
-                except Exception as e:
-                    # logger_app.error("{}: {}".format("Add Position: ", str(e)))
-                    db.session.rollback()
-                    position_update = Position.update_position(position)
-                    try:
-                        db.session.add(position_update)
-                        db.session.commit()
-                    except Exception as e:
-                        logger_app.error("{}: {}".format("Update Position: ", str(e)))
-                        db.session.rollback()
-        # return jsonify(response.data)
+            logger_app.error("{} :{}".format(NameTask.updating_positions.name, e))
 
     tasks = db.session.query(Task).filter(Task.name == NameTask.updating_positions.value)\
                                   .order_by(Task.timestamp_created.desc()).all()

@@ -1,10 +1,13 @@
+import hashlib, os
 import redis
+import requests
+
 from flask_mail import Message
 from celery.schedules import crontab
 
 from app import app, celery_app, redis_client
 from app import mail
-from app.models import db, TypeDealer, NameTask, Task, Category
+from app.models import db, TypeDealer, NameTask, Task, Category, Position, Characteristic, Image
 from . import NLReceiver, logger_app
 
 
@@ -143,8 +146,90 @@ def update_category(self):
 
 @celery_app.task(bind=True)
 def update_position(self):
-    pass
 
+    task = Task(name=NameTask.updating_positions.value)
+    task.success = False
+    task.result_msg = "Start update_position"
+    db.session.add(task)
+    db.session.commit()
+
+    categories_have_positions = db.session.query(Category).filter(Category.turn, Category.nl_leaf).all()
+    for category in categories_have_positions:
+        response = NLReceiver(app.config["NL_GOODS"]["URL"].format(catalog_name=app.config["NL_CATALOG_MAIN"],
+                                                                   category_id=category.nl_id),
+                              app.config["NL_GOODS"]["DATA_KEY"])
+
+        for position in Position.gen_el_to_db(response.data):
+            try:
+                db.session.add(position)
+                db.session.commit()
+            except Exception as e:
+                # logger_app.error("{}: {}".format("Add Position: ", str(e)))
+                db.session.rollback()
+                position_update = Position.update_position(position)
+                try:
+                    db.session.add(position_update)
+                    db.session.commit()
+                except Exception as e:
+                    logger_app.error("{}: {}".format("Update Position: ", str(e)))
+                    db.session.rollback()
+            else:
+                #########################
+                # This place GET characteristics to position
+                response = NLReceiver(app.config["NL_GOOD"]["URL"].format(catalog_name=app.config["NL_CATALOG_MAIN"],
+                                                                          category_id=category.nl_id,
+                                                                          position_id=position.nl_id),
+                                      app.config["NL_GOOD"]["DATA_KEY"])
+
+                characteristics = Characteristic.gen_el_to_db(position, response.data) or {}
+                for characteristic in characteristics:
+                    try:
+                        db.session.add(characteristic)
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+
+                #########################
+                # This place GET image to position
+                response = NLReceiver(app.config["NL_IMG_GOOD"]["URL"].format(goodsId=position.nl_id),
+                                      app.config["NL_IMG_GOOD"]["DATA_KEY"])
+
+                m = hashlib.md5()
+                if not response.data:
+                    with open(app.config["DEFAULT_IMAGE_FOR_CATALOG"], "rb") as response_image:
+                        response_image_content = response_image.read()
+                        m.update(response_image_content)
+                else:
+                    url_image = response.data["items"][0]["properties"]["Url"]
+                    response_image = requests.get(
+                        url_image.rsplit("&", 1)[0] + app.config["LOGOTYPE"])  # it is string fot URL
+                    response_image_content = response_image.content
+                    m.update(response_image_content)
+
+                hash_image = m.hexdigest()
+                image = db.session.query(Image).filter(Image.hash==hash_image).first()
+                if not image:
+                    sub_folder_name = hash_image[0:2]
+                    sub_folder = os.path.join(app.config["UPLOAD_FOLDER"], sub_folder_name)
+                    if not os.path.exists(sub_folder):
+                        os.mkdir(sub_folder)
+
+                    image_name = hash_image + ".jpg"
+                    path_to_image = os.path.join(sub_folder, image_name)
+                    with open(path_to_image, "wb") as f:
+                        f.write(response_image_content)
+
+                    image = Image(original_name=image_name, name=image_name, hash=hash_image,
+                                  path=os.path.join(sub_folder_name, image_name))
+
+                position.images.append(image)
+                db.session.add(position)
+                db.session.commit()
+
+    task.success = True
+    task.result_msg = "Finish update_position"
+    db.session.add(task)
+    db.session.commit()
 
 @celery_app.task
 def gen_prime(x):
