@@ -4,7 +4,7 @@ from flask_login import login_required, login_user, current_user, logout_user
 from app import app, db
 from app.models import User, NameTask
 from app.backend import logger_app
-from app.backend.waiter import send_email
+from app.backend.tasker import send_email
 
 from .forms import ConsultationForm
 
@@ -29,7 +29,11 @@ def index():
 
             return redirect(url_for("index"))
         except Exception as e:
-
             logger_app.error("{} :{}".format(NameTask.sending_email.name, e))
+            flash("Запрос НЕ создан, что то пошло не так.", "error")
+
+            return redirect(url_for("index"))
+
+
 
     return render_template("frontend/index.html", form=form)

@@ -13,11 +13,12 @@ from . import NLReceiver, logger_app
 
 celery_app.conf.beat_schedule = {
     # Executes every Monday morning at 7:30 a.m.
-    "add-every-monday-morning": {
-        "task": "app.backend.waiter.test_task",
-        "schedule": crontab(minute="*/1")
+    "add-every-day-morning": {
+        "task": "app.backend.tasker.update_category",
+        "schedule": crontab(minute=0, hour=0)
     },
 }
+
 celery_app.conf.timezone = "Europe/Moscow"
 celery_app.conf.enable_utc = True
 
@@ -51,9 +52,6 @@ def update_category(self):
 
     task = Task(name=NameTask.updating_structure_of_catalog.value)
     try:
-
-        import time
-        time.sleep(15)
 
         response = NLReceiver(app.config["NL_CATEGORIES"]["URL"].format(catalog_name=app.config["NL_CATALOG_MAIN"]),
                               app.config["NL_CATEGORIES"]["DATA_KEY"])
