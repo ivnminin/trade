@@ -9,13 +9,17 @@ API needs to regularly renew the catalogs, items, characteristics, availability,
 ## Run the project
 Create a folder where you plan to save the project files.
 And then make some commands:
-`git clone https://github.com/ivngithub/trade.git`
-`cd trade`
-`git checkout run-project`
+```
+git clone https://github.com/ivngithub/trade.git
+cd trade
+git checkout run-project
+```
 
 You must have Docker installed.
 
-`docker-compose build`
-`docker-compose up`
+```
+docker-compose build
+docker-compose up
+```
 
 For the correct work of the project, file .env should be completed correctly.
