@@ -23,3 +23,10 @@ docker-compose up
 ```
 
 For the correct work of the project, file .env should be completed correctly.
+
+If you launch first time you need to create a database.
+```
+docker exec -it <container_name> bash
+flask create_db
+```
+
