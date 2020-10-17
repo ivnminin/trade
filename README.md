@@ -12,7 +12,6 @@ And then make some commands:
 ```
 git clone https://github.com/ivngithub/trade.git
 cd trade
-git checkout run-project
 ```
 
 You must have Docker installed.
@@ -30,3 +29,4 @@ docker exec -it <container_name> bash
 flask create_db
 ```
 
+Use localhost:8001 in browser.
