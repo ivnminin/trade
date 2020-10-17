@@ -12,7 +12,6 @@ And then make some commands:
 ```
 git clone https://github.com/ivngithub/trade.git
 cd trade
-git checkout run-project
 ```
 
 You must have Docker installed.
@@ -23,3 +22,18 @@ docker-compose up
 ```
 
 For the correct work of the project, file .env should be completed correctly.
+
+## Run tests
+If you want to see html report of tests coverage.
+
+```
+docker exec -it <container_name> bash
+pytest -v --cov=app --cov-report html
+```
+
+If you want to run tests for project.
+
+```
+docker exec -it <container_name> bash
+pytest -v --cov=app
+```
