@@ -70,7 +70,7 @@ class DevelopementConfig(BaseConfig):
 
 class TestingConfig(BaseConfig):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get("TESTING_DATABASE_URI") or POSTGRESQL
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(app_dir, "test_app.db")
 
 
 class ProductionConfig(BaseConfig):

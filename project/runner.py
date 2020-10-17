@@ -32,29 +32,6 @@ def test():
     tests = unittest.TestLoader().discover("tests")
     unittest.TextTestRunner(verbosity=2).run(tests)
 
-@app.cli.command("test_coverage")
-def coverage():
-    """
-    Run tests using the coverage module
-    """
-
-    import os
-    import coverage
-    import unittest
-
-    cov = coverage.coverage(branch=True, source="app/*")
-    cov.start()
-    tests = unittest.TestLoader().discover("tests")
-    unittest.TextTestRunner(verbosity=2).run(tests)
-    cov.stop()
-    cov.save()
-    print("Coverage summary:")
-    cov.report()
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    cov_dir = os.path.join(basedir, "coverage")
-    cov.html_report(directory=cov_dir)
-    cov.erase()
-
 
 if __name__ == "__main__":
     manager.run()

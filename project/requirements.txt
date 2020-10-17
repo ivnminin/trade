@@ -29,4 +29,4 @@ redlock-py==1.0.8
 awesome-slugify==1.6.5
 flower==0.9.4
 flask-redis==0.4.0
-coverage==5.3
+pytest-cov==2.10.1
