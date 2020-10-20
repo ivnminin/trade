@@ -1,0 +1,123 @@
+version: "2"
+
+services:
+    trade:
+        build: .
+        image: project_tarde
+        ports:
+            - "8001:5000"
+            - "5555:5555"
+        environment:
+            FLASK_APP: runner.py
+            FLASK_DEBUG: "True"
+
+            NL_USERNAME: ${NL_USERNAME}
+            NL_PASSWORD: ${NL_PASSWORD}
+            MAIL_ADMIN: ${MAIL_ADMIN}
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_NAME: ${DB_NAME}
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT}
+
+            REDIS_HOST: ${REDIS_HOST}
+            RABBITMQ_HOST: ${RABBITMQ_HOST}
+            RABBITMQ_USER: ${RABBITMQ_USER}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+            RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+
+        links:
+            - postgres_trade
+
+        volumes:
+            - ./project:/project
+        #    tty: true
+
+    postgres_trade:
+        restart: always
+        image: postgres:9.6
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_NAME}
+        ports:
+            - "5432:5432"
+
+    redis_trade:
+        image: redis
+        ports:
+            - "6379:6379"
+        restart: always
+
+    rabbitmq_trade:
+        image: rabbitmq:3.6.6-management
+        restart: "always"
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        environment:
+            RABBITMQ_DEFAULT_PASS: mypass1
+            RABBITMQ_DEFAULT_USER: myuser1
+            RABBITMQ_DEFAULT_VHOST: myvhost1
+        links:
+            - trade
+
+    celery_trade:
+        image: project_tarde
+        command: celery  -A app.backend.tasker:celery_app worker --logfile=c.log
+        environment:
+            FLASK_APP: runner.py
+            FLASK_DEBUG: "True"
+
+            NL_USERNAME: ${NL_USERNAME}
+            NL_PASSWORD: ${NL_PASSWORD}
+            MAIL_ADMIN: ${MAIL_ADMIN}
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_NAME: ${DB_NAME}
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT}
+
+            REDIS_HOST: ${REDIS_HOST}
+            RABBITMQ_HOST: ${RABBITMQ_HOST}
+            RABBITMQ_USER: ${RABBITMQ_USER}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+            RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+
+        volumes:
+            - ./project:/project
+        links:
+            - rabbitmq_trade
+            - redis_trade
+        depends_on:
+            - trade
+
+    celery_trade_beat:
+        image: project_tarde
+        command: celery beat -A app.backend.tasker:celery_app
+        environment:
+            FLASK_APP: runner.py
+            FLASK_DEBUG: "True"
+
+            NL_USERNAME: ${NL_USERNAME}
+            NL_PASSWORD: ${NL_PASSWORD}
+            MAIL_ADMIN: ${MAIL_ADMIN}
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_NAME: ${DB_NAME}
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT}
+
+            REDIS_HOST: ${REDIS_HOST}
+            RABBITMQ_HOST: ${RABBITMQ_HOST}
+            RABBITMQ_USER: ${RABBITMQ_USER}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+            RABBITMQ_VHOST: ${RABBITMQ_VHOST}
+
+        volumes:
+            - ./project:/project
+        links:
+            - rabbitmq_trade
+            - redis_trade
+        depends_on:
+            - trade
