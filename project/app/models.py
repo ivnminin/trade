@@ -3,9 +3,10 @@ from datetime import datetime
 from slugify import UniqueSlugify, CYRILLIC
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from flask import current_app
+from flask_login import LoginManager, UserMixin, login_required, login_user, current_user, logout_user
+
 from app import db, login_manager
-from flask_login import (LoginManager, UserMixin, login_required,
-                          login_user, current_user, logout_user)
 
 
 @login_manager.user_loader
@@ -26,7 +27,7 @@ class Role(db.Model):
 
     @classmethod
     def insert_roles(cls):
-        for permission in current_user.config["PERMISSION"]:
+        for permission in current_app.config["PERMISSION"]:
             role = cls(name=permission)
             db.session.add(role)
             db.session.commit()

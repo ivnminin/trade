@@ -76,7 +76,7 @@ class NLReceiver:
                            data_response_status, nl_rest_url, data_key, params)
         try:
             pause = False
-            while count != 40:
+            while count <= 40:
                 count += 1
                 self._pause()
                 r = s.get(nl_rest_url, params=params)
