@@ -4,6 +4,7 @@ services:
     trade:
         build: .
         image: project_tarde
+        container_name: trade_container
         ports:
             - "8001:5000"
             - "5555:5555"
