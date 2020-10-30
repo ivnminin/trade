@@ -8,16 +8,20 @@ class BaseConfig:
     SECRET_KEY = os.environ.get("SECRET_KEY") or "secret key"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    MAIL_SERVER = os.environ.get("MAIL_SERVER") or "smtp.googlemail.com"
-    MAIL_PORT = os.environ.get("MAIL_PORT") or 587
-    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") or True
-    # MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL") or True
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME") or "pass"
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD") or "pass"
-    MAIL_DEFAULT_SENDER = MAIL_USERNAME
-    MAIL_ADMIN = os.environ.get("MAIL_ADMIN") or "admim@admim.admim"
+    REDIS_URL = "redis://{}:6379/0".format(os.environ.get("REDIS_HOST"))
+    RABBITMQ_URL = "amqp://{}:{}@{}:5672/{}".format(os.environ["RABBITMQ_USER"], os.environ["RABBITMQ_PASSWORD"],
+                                                    os.environ["RABBITMQ_HOST"], os.environ["RABBITMQ_VHOST"])
 
-    ITEMS_PER_PAGE = 15
+    MAIL_SERVER = os.environ.get("MAIL_SERVER")
+    MAIL_PORT = os.environ.get("MAIL_PORT")
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS")
+    # MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL") or True
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = MAIL_USERNAME
+    MAIL_ADMIN = os.environ.get("MAIL_ADMIN")
+
+    ITEMS_PER_PAGE = 150
 
     PERMISSION = ["admin", "moderator", "user"]
 
@@ -26,8 +30,8 @@ class BaseConfig:
 
     PRODUCT_CATALOG_ROOT_DIRECTORY = "КАТАЛОГ"
 
-    NL_USERNAME = os.environ["NL_USERNAME"]
-    NL_PASSWORD = os.environ["NL_PASSWORD"]
+    NL_USERNAME = os.environ.get("NL_USERNAME")
+    NL_PASSWORD = os.environ.get("NL_PASSWORD")
     NL_AUTH = {"DATA_KEY": "tokenResponse", "URL": "http://services.netlab.ru/rest/authentication/token.json"}
     NL_CATALOG = {"DATA_KEY": "catalogsResponse", "URL": "http://services.netlab.ru/rest/catalogsZip/list.json"}
     NL_CATALOG_MAIN = "Прайс-лист"
@@ -45,6 +49,10 @@ class BaseConfig:
     NL_GOOD_UPDATE = {"DATA_KEY": "goodsResponse",
                        "URL": "http://services.netlab.ru/rest/catalogsZip/goodsByUid/{position_id}.json"}
 
+    LOGOTYPE = "&100123939"
+
+    UPLOAD_FOLDER = os.path.join(app_dir, "app/static/images/")
+    DEFAULT_IMAGE_FOR_CATALOG = os.path.join(app_dir, "app/static/images/default.jpg")
 
 POSTGRESQL = "postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}".format(
                 os.environ.get("DB_USER"),

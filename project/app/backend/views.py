@@ -4,7 +4,7 @@ from flask import request, render_template, redirect, url_for, flash, make_respo
 from flask_login import login_required, login_user, current_user, logout_user
 from app.models import db, User, TypeDealer, NameTask, Task, Category, Position, Characteristic, Image
 from .forms import LoginForm
-from .waiter import update_category, update_position, test_task, send_email
+from .tasker import update_category, update_position, test_task, send_email
 from . import logger_app
 
 
