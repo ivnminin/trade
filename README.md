@@ -30,3 +30,25 @@ flask create_db
 ```
 
 Use localhost:8001 in browser.
+
+## User Story
+
+The application currently doesn’t have an interface. There are two options. First one is for the user. Second one for the administrator.
+
+Route ```localhost:8001```
+Currently, a user can only see and complete the form with a feedback. In that form, the user can provide a name, question, and contact information. After that, the administrator will get an email with that information. 
+
+Route ```localhost:8001/backend```
+Interface for the administrator has navigation.
+
+Route ```localhost:8001/backend/category```
+Display of all categories. You can see a parent for a particular category and you can see category is included or excluded.
+
+Route ```localhost:8001/backend/task/category```
+Display of all tasks for categories. Task’s completion time, success of the task, and result of the task. The task can by manually activated.
+
+Route ```localhost:8001/backend/position```
+Display of all items. You can see item’s name, vendor code, and item is included or excluded.
+
+Route ```localhost:8001/backend/task/position```
+Display of all tasks for items.  Task’s completion time, success of the task, and result of the task. The task can by manually activated.
