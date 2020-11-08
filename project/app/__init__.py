@@ -10,7 +10,6 @@ from flask_redis import FlaskRedis
 from werkzeug.debug import DebuggedApplication
 from celery import Celery
 
-
 import config
 
 app = Flask(__name__)
@@ -53,7 +52,7 @@ login_manager.login_view = "login"
 from .backend import backend as backend_blueprint
 app.register_blueprint(backend_blueprint)
 
-from .hands import hands as hands_blueprint
-app.register_blueprint(hands_blueprint, url_prefix="/hands")
+from .api import api as api_blueprint
+app.register_blueprint(api_blueprint)
 
 from . import views

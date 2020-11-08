@@ -12,7 +12,7 @@
                 <p>Текущие задачи:</p>
                 <p id="task_none">В данный момент задача для каталога не выполняется.</p>
                 <div id="task_hand" style="display: none;">
-                    <p>Задача для каталога выполняется:</p>
+                    <p>Выполняется задачи для каталога:</p>
                 </div>
             </div>
         </div>
@@ -43,21 +43,27 @@
 
                         // add task element
                         $.each(response.data, function(index, value){
-                            if ($("#" + value + "").length === 0) {
+                            if ($("#" + value['task_id'] + "").length === 0) {
                                 var img = "<span class=\"align-center\" style=\"display: block; margin: 15px 0;\"><img src=\"{{ url_for('static', filename='preloader.gif') }}\" alt=\"\"></span>";
-                                var p = "<p style=\"background-color: #eaeaea; border-radius: 5px; display: inline-block; padding: 10px;\">task_id: <span>" + value + "</span></p>";
-                                div_task_hand.append("<div id="+ value +" class=\"task\">" + p + img + "<hr></div>")
+                                var p_task_result = "task_status: <span id=\"task_status\">" + value['result_task'] + "</span>";
+                                var p_task_id = "<p style=\"background-color: #eaeaea; border-radius: 5px; display: inline-block; padding: 10px;\">" +
+                                    "task_id: <span>" + value['task_id'] + "<br></span>"+ p_task_result +"</p>";
+
+
+                                div_task_hand.append("<div id="+ value['task_id'] +" class=\"task\">" + p_task_id + img +"<hr></div>")
+                            }
+                            else {
+                                $("#" + value['task_id'] + " " + "#task_status").text(JSON.stringify(value['result_task']));
                             }
                         });
                         div_task_hand.show();
 
                         // remove task element if not in response.data
                         $.each($(".task"), function(index, value){
-                            if(response.data.indexOf(value.id) === -1) {
+                            if(response.data.map(item => item['task_id']).indexOf(value.id) === -1) {
                                 value.remove()
                             }
                         });
-
                     }
                     else {$("#task_hand").hide(); $("#task_none").show()}
                 }).fail(function(jqXHR, textStatus, errorThrown) {

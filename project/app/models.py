@@ -293,43 +293,44 @@ class Position(db.Model):
     #         return "через {} дня".format(delta_days)
     #     return "через {} дней".format(delta_days)
 
-    # def _filter_characteristics(self, characteristics):
-    #     characteristics_after_filter = [characteristic for characteristic in characteristics if characteristic.turn]
-    #     def find_position_characteristic(name):
-    #         try:
-    #             p = [characteristic.name for characteristic in characteristics_after_filter]
-    #             position_characteristic = p.index(name)
-    #         except ValueError:
-    #             pass
-    #         else:
-    #             return position_characteristic
-    #
-    #     item = find_position_characteristic("сайт производителя")
-    #     if item:
-    #         characteristics_after_filter.append(characteristics_after_filter.pop(item))
-    #
-    #     def change_position(item):
-    #         characteristics_after_filter.insert(0, characteristics_after_filter.pop(item))
-    #
-    #
-    #     item = find_position_characteristic("описание")
-    #     if item:
-    #         change_position(item)
-    #
-    #     item = find_position_characteristic("Назначение")
-    #     if item:
-    #         change_position(item)
-    #
-    #     item = find_position_characteristic("название")
-    #     if item:
-    #         change_position(item)
-    #
-    #     return characteristics_after_filter
-    #
-    # def get_characteristics(self):
-    #
-    #     return self._filter_characteristics(self.characteristics)
-    #
+    def _filter_characteristics(self, characteristics):
+        characteristics_after_filter = [characteristic for characteristic in characteristics if characteristic.turn]
+        def find_position_characteristic(name):
+            try:
+                p = [characteristic.name for characteristic in characteristics_after_filter]
+                position_characteristic = p.index(name)
+            except ValueError:
+                pass
+            else:
+                return position_characteristic
+
+        item = find_position_characteristic("сайт производителя")
+        if item:
+            characteristics_after_filter.append(characteristics_after_filter.pop(item))
+
+        def change_position(item):
+            characteristics_after_filter.insert(0, characteristics_after_filter.pop(item))
+
+
+        item = find_position_characteristic("описание")
+        if item:
+            change_position(item)
+
+        item = find_position_characteristic("Назначение")
+        if item:
+            change_position(item)
+
+        item = find_position_characteristic("название")
+        if item:
+            change_position(item)
+
+        return characteristics_after_filter
+
+    def get_characteristics(self):
+
+        return [{"name": characteristic.name, "value": characteristic.vale}
+                for characteristic in self._filter_characteristics(self.characteristics)]
+
     @staticmethod
     def get_len_el_to_db(category_has_positions):
         return len(category_has_positions["goods"])
