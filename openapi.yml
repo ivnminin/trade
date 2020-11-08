@@ -1,0 +1,103 @@
+openapi: 3.0.1
+info:
+  title: Swagger Trade store
+  description: 'This is a sample server Trade store server.  You can find out more about     Swagger
+    at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).      For
+    this sample, you can use the api key `special-key` to test the authorization     filters.'
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+- url: http://localhost:8001/api/1.0/
+  description: Everything about Trade API
+paths:
+  /position/{article}:
+    get:
+      tags:
+      - Position data
+      summary: Get position by Article
+      description: Returns a single position
+      operationId: getPositionByArticle
+      parameters:
+        - $ref: '#/components/parameters/Article'
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/200'
+        404:
+          description: Not found
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/404'
+components:
+  parameters:
+    Article:
+      name: article
+      in: path
+      description: '**Position ID**. *Example: `217A277`*. You can call by
+      position ID. The API responds with the exact result.'
+      required: true
+      schema:
+        type: string
+  schemas:
+    200:
+      title: Successful response
+      type: object
+      properties:
+        position:
+          $ref: '#/components/schemas/Position'
+    Position:
+      title: Position
+      type: object
+      properties:
+        name:
+          type: string
+          description: Position name
+          example: Unknown manufacturer, Fake Model 17
+        price:
+          type: number
+          description: Position price
+          example: 17.92
+        image:
+          type: string
+          description: Position Url of image
+          example: /fa/qweasdgfd.jpg
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Characteristics'
+        Article:
+          type: string
+          description: Position Article
+          example: 217A277
+    Characteristics:
+      title: Сharacteristics
+      type: object
+      properties:
+        name:
+          type: string
+          description: Сharacteristics name
+          example: Power
+        price:
+          type: string
+          description: Сharacteristics value
+          example: 2 Kilowatts
+    404:
+      title: Not found
+      type: object
+      properties:
+        error_msg:
+          type: string
+          description: Error message
+          example: Position not found

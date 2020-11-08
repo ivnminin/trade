@@ -52,4 +52,7 @@ login_manager.login_view = "login"
 from .backend import backend as backend_blueprint
 app.register_blueprint(backend_blueprint)
 
+from .api import api as api_blueprint
+app.register_blueprint(api_blueprint)
+
 from . import views
